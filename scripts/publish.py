@@ -59,7 +59,7 @@ def detect_changed_members(root: Path) -> list[str]:
             continue
         new_ver = get_version(member_dir)
         old_ver = get_old_version(member)
-        if old_ver != new_ver:
+        if old_ver is not None and old_ver != new_ver:
             changed.append(member)
     return changed
 

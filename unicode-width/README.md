@@ -35,7 +35,7 @@ main() {
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `charWidth` | `(Rune): Option<Int64>` | 字符��示宽度，控制字符返回 None |
+| `charWidth` | `(Rune): Option<Int64>` | 字符显示宽度，控制字符返回 None |
 | `charWidthCJK` | `(Rune): Option<Int64>` | CJK 上下文字符宽度 |
 | `strWidth` | `(String): Int64` | 字符串显示宽度 |
 | `strWidthCJK` | `(String): Int64` | CJK 上下文字符串宽度 |

@@ -33,7 +33,7 @@ main() {
 |------|------|------|
 | `eq` | `(String, String): Bool` | 大小写无关相等比较 |
 | `toFoldedCase` | `(String): String` | 返回 case-folded 字符串 |
-| `foldedRunes` | `(Rune): Array<Rune>` | 返回���个 Rune 折叠后的结果 |
+| `foldedRunes` | `(Rune): Array<Rune>` | 返回单个 Rune 折叠后的结果 |
 
 ## 许可证
 

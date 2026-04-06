@@ -47,7 +47,7 @@ main() {
 
 ## 重新生成查找表
 
-查找表由 Python 脚本从 Unicode 官��数据生成：
+查找表由 Python 脚本从 Unicode 官方数据生成：
 
 ```bash
 cd scripts
