@@ -1,0 +1,6 @@
+[package]
+  name = "unicode_case"
+  version = "0.1.0"
+  description = "Unicode case-insensitive comparison via case folding"
+  output-type = "static"
+  cjc-version = "1.1.0"

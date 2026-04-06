@@ -1,0 +1,21 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Cangjie
+        uses: Zxilly/setup-cangjie@v2
+        with:
+          channel: sts
+          version: 1.1.0-beta.25
+      - name: Build
+        run: cjpm build
+      - name: Test
+        run: cjpm test

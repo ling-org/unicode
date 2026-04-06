@@ -1,0 +1,27 @@
+name: Publish
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Setup Cangjie
+        uses: Zxilly/setup-cangjie@v2
+        with:
+          channel: sts
+          version: 1.1.0-beta.25
+          repo-token: ${{ secrets.CANGJIE_REPO_TOKEN }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Publish
+        run: uv run scripts/publish.py --detect-and-publish
+        env:
+          GH_TOKEN: ${{ github.token }}
