@@ -9,14 +9,22 @@ import math
 import operator
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from itertools import batched
 from typing import Iterable, IO
 
 from common import (
-    UNICODE_VERSION,
     NUM_CODEPOINTS,
     Codepoint,
+    codepoints_for_block,
     fetch_open,
+    find_codepoint,
+    find_codepoints_by_name_regex,
+    find_codepoints_by_predicate,
+    find_codepoints_with_canonical_decomposition,
+    find_codepoints_with_canonical_decomposition_suffix,
+    load_property_set,
+    load_unicode_data,
     load_unicode_version,
     load_property,
     to_sorted_ranges,
@@ -145,6 +153,170 @@ class WidthState(enum.IntEnum):
 assert len(set([v.value for v in WidthState])) == len([v.value for v in WidthState])
 
 
+@dataclass(frozen=True)
+class ZeroWidthRuleSets:
+    force_zero: set[Codepoint]
+    force_non_zero: set[Codepoint]
+
+
+@dataclass(frozen=True)
+class SpecialWidthRuleSets:
+    common: dict[Codepoint, WidthState]
+    cjk_only: dict[Codepoint, WidthState]
+    non_cjk_only: dict[Codepoint, WidthState]
+
+
+@dataclass(frozen=True)
+class VariationSelectorRuleSets:
+    common: set[Codepoint]
+    cjk_only: set[Codepoint]
+    non_cjk_only: set[Codepoint]
+
+
+def _codepoints_named(*names: str) -> set[Codepoint]:
+    return {find_codepoint(name) for name in names}
+
+
+def _khmer_coeng_eligible_letters() -> set[Codepoint]:
+    included_names = {
+        "KHMER LETTER KA",
+        "KHMER LETTER KHA",
+        "KHMER LETTER KO",
+        "KHMER LETTER NGO",
+        "KHMER LETTER CA",
+        "KHMER LETTER CHA",
+        "KHMER LETTER CO",
+        "KHMER LETTER NYO",
+        "KHMER LETTER DA",
+        "KHMER LETTER TTHA",
+        "KHMER LETTER DO",
+        "KHMER LETTER TTHO",
+        "KHMER LETTER NNO",
+        "KHMER LETTER TA",
+        "KHMER LETTER THA",
+        "KHMER LETTER TO",
+        "KHMER LETTER THO",
+        "KHMER LETTER NO",
+        "KHMER LETTER PHA",
+        "KHMER LETTER PO",
+        "KHMER LETTER PHO",
+        "KHMER LETTER MO",
+        "KHMER LETTER HA",
+        "KHMER LETTER QA",
+        "KHMER INDEPENDENT VOWEL QU",
+        "KHMER INDEPENDENT VOWEL RY",
+        "KHMER INDEPENDENT VOWEL RYY",
+        "KHMER INDEPENDENT VOWEL QE",
+    }
+    return _codepoints_named(*sorted(included_names))
+
+
+def _tifinagh_consonants() -> set[Codepoint]:
+    letters = find_codepoints_by_name_regex(r"^TIFINAGH LETTER ")
+    excluded = _codepoints_named(
+        "TIFINAGH LETTER YA",
+        "TIFINAGH LETTER YE",
+        "TIFINAGH LETTER YO",
+    )
+    modifier = _codepoints_named("TIFINAGH MODIFIER LETTER LABIALIZATION MARK")
+    return (letters - excluded) | modifier
+
+
+def derive_ambiguous_width_overrides() -> set[Codepoint]:
+    middle_dot = find_codepoint("MIDDLE DOT")
+    return find_codepoints_with_canonical_decomposition((middle_dot,))
+
+
+def derive_zero_width_rule_sets() -> ZeroWidthRuleSets:
+    prepend_without_pcm = load_property_set(
+        "auxiliary/GraphemeBreakProperty.txt",
+        "Prepend",
+    ) - load_property_set("PropList.txt", "Prepended_Concatenation_Mark")
+
+    zero_width_cf_marks = find_codepoints_by_predicate(
+        lambda record: record.general_category == "Cf"
+        and (
+            record.name.endswith("ABOVE")
+            or record.name in {
+                "SYRIAC ABBREVIATION MARK",
+                "ARABIC DISPUTED END OF AYAH",
+            }
+        )
+    )
+
+    return ZeroWidthRuleSets(
+        force_zero=prepend_without_pcm
+        | zero_width_cf_marks
+        | _codepoints_named("DEVANAGARI CARET"),
+        force_non_zero=_codepoints_named(
+            "HANGUL CHOSEONG FILLER",
+            "TIFINAGH CONSONANT JOINER",
+        ),
+    )
+
+
+def derive_variation_selector_rules() -> VariationSelectorRuleSets:
+    return VariationSelectorRuleSets(
+        common=_codepoints_named("VARIATION SELECTOR-16"),
+        cjk_only=_codepoints_named("VARIATION SELECTOR-1", "VARIATION SELECTOR-3"),
+        non_cjk_only=_codepoints_named("VARIATION SELECTOR-2", "VARIATION SELECTOR-15"),
+    )
+
+
+def derive_special_widths() -> SpecialWidthRuleSets:
+    common: dict[Codepoint, WidthState] = {}
+    cjk_only: dict[Codepoint, WidthState] = {}
+    non_cjk_only: dict[Codepoint, WidthState] = {}
+
+    common[find_codepoint("LINE FEED")] = WidthState.LINE_FEED
+    common[find_codepoint("HEBREW LETTER LAMED")] = WidthState.HEBREW_LETTER_LAMED
+
+    for cp in load_property_set("extracted/DerivedJoiningGroup.txt", "Alef"):
+        common[cp] = WidthState.JOINING_GROUP_ALEF
+
+    for cp in _khmer_coeng_eligible_letters():
+        common[cp] = WidthState.KHMER_COENG_ELIGIBLE_LETTER
+
+    common[find_codepoint("KHMER INDEPENDENT VOWEL QAA")] = WidthState.WIDE
+    common[find_codepoint("KHMER SIGN BEYYAL")] = WidthState.THREE
+    common[find_codepoint("BUGINESE LETTER YA")] = WidthState.BUGINESE_LETTER_YA
+
+    for cp in _tifinagh_consonants():
+        common[cp] = WidthState.TIFINAGH_CONSONANT
+
+    common[find_codepoint("LISU LETTER TONE MYA NA")] = WidthState.LISU_TONE_LETTER_MYA_NA_JEU
+    common[find_codepoint("LISU LETTER TONE MYA JEU")] = WidthState.LISU_TONE_LETTER_MYA_NA_JEU
+    common[find_codepoint("OLD TURKIC LETTER ORKHON I")] = WidthState.OLD_TURKIC_LETTER_ORKHON_I
+    common[find_codepoint("KIRAT RAI VOWEL SIGN E")] = WidthState.KIRAT_RAI_VOWEL_SIGN_E
+    common[find_codepoint("KIRAT RAI VOWEL SIGN AI")] = WidthState.KIRAT_RAI_VOWEL_SIGN_AI
+
+    for cp in load_property_set("emoji/emoji-data.txt", "Emoji_Presentation"):
+        common[cp] = WidthState.EMOJI_PRESENTATION
+    for cp in load_property_set("emoji/emoji-data.txt", "Emoji_Modifier"):
+        common[cp] = WidthState.EMOJI_MODIFIER
+    for cp in load_property_set("PropList.txt", "Regional_Indicator"):
+        common[cp] = WidthState.REGIONAL_INDICATOR
+
+    cjk_only[find_codepoint("COMBINING LONG SOLIDUS OVERLAY")] = WidthState.COMBINING_LONG_SOLIDUS_OVERLAY
+    variation_rules = derive_variation_selector_rules()
+    for cp in variation_rules.cjk_only:
+        cjk_only[cp] = WidthState.VARIATION_SELECTOR_1_2_OR_3
+    for cp in variation_rules.common:
+        common[cp] = WidthState.VARIATION_SELECTOR_16
+    for cp in variation_rules.non_cjk_only:
+        non_cjk_only[cp] = (
+            WidthState.VARIATION_SELECTOR_15
+            if cp == find_codepoint("VARIATION SELECTOR-15")
+            else WidthState.VARIATION_SELECTOR_1_2_OR_3
+        )
+
+    return SpecialWidthRuleSets(
+        common=common,
+        cjk_only=cjk_only,
+        non_cjk_only=non_cjk_only,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Data loading functions
 # ---------------------------------------------------------------------------
@@ -198,16 +370,14 @@ def load_east_asian_widths() -> list[EastAsianWidth]:
         ),
     )
 
-    width_map[0x0387] = EastAsianWidth.AMBIGUOUS
+    for cp in derive_ambiguous_width_overrides():
+        width_map[cp] = EastAsianWidth.AMBIGUOUS
 
-    with fetch_open("UnicodeData.txt") as udata:
-        single = re.compile(r"([0-9A-Z]+);.*?;.*?;.*?;.*?;([0-9A-Z]+) 0338;")
-        for line in udata.readlines():
-            if match := single.match(line):
-                composed = int(match.group(1), 16)
-                decomposed = int(match.group(2), 16)
-                if width_map[decomposed] == EastAsianWidth.AMBIGUOUS:
-                    width_map[composed] = EastAsianWidth.AMBIGUOUS
+    overlay = find_codepoint("COMBINING LONG SOLIDUS OVERLAY")
+    for cp in find_codepoints_with_canonical_decomposition_suffix((overlay,)):
+        base = load_unicode_data()[cp].decomposition[0]
+        if width_map[base] == EastAsianWidth.AMBIGUOUS:
+            width_map[cp] = EastAsianWidth.AMBIGUOUS
 
     return width_map
 
@@ -227,29 +397,11 @@ def load_zero_widths() -> list[bool]:
         lambda cp: operator.setitem(zw_map, cp, True),
     )
 
-    zw_map[0x070F] = True
-    zw_map[0x0605] = True
-    zw_map[0x0890] = True
-    zw_map[0x0891] = True
-    zw_map[0x08E2] = True
-
-    gcb_prepend = set()
-    load_property(
-        "auxiliary/GraphemeBreakProperty.txt",
-        "Prepend",
-        lambda cp: gcb_prepend.add(cp),
-    )
-    load_property(
-        "PropList.txt",
-        "Prepended_Concatenation_Mark",
-        lambda cp: gcb_prepend.remove(cp),
-    )
-    for cp in gcb_prepend:
+    zero_width_rules = derive_zero_width_rule_sets()
+    for cp in zero_width_rules.force_zero:
         zw_map[cp] = True
-
-    zw_map[0x115F] = False
-    zw_map[0x2D7F] = False
-    zw_map[0xA8FA] = True
+    for cp in zero_width_rules.force_non_zero:
+        zw_map[cp] = False
 
     return zw_map
 
@@ -276,73 +428,17 @@ def load_width_maps() -> tuple[list[WidthState], list[WidthState]]:
             else:
                 ea.append(WidthState.WIDE)
 
-    alef_joining = []
-    load_property(
-        "extracted/DerivedJoiningGroup.txt",
-        "Alef",
-        lambda cp: alef_joining.append(cp),
-    )
+    special_widths = derive_special_widths()
 
-    regional_indicators = []
-    load_property(
-        "PropList.txt",
-        "Regional_Indicator",
-        lambda cp: regional_indicators.append(cp),
-    )
+    for cp, width in special_widths.common.items():
+        not_ea[cp] = width
+        ea[cp] = width
 
-    emoji_modifiers = []
-    load_property(
-        "emoji/emoji-data.txt",
-        "Emoji_Modifier",
-        lambda cp: emoji_modifiers.append(cp),
-    )
+    for cp, width in special_widths.cjk_only.items():
+        ea[cp] = width
 
-    emoji_presentation = []
-    load_property(
-        "emoji/emoji-data.txt",
-        "Emoji_Presentation",
-        lambda cp: emoji_presentation.append(cp),
-    )
-
-    for cps, width in [
-        ([0x0A], WidthState.LINE_FEED),
-        ([0x05DC], WidthState.HEBREW_LETTER_LAMED),
-        (alef_joining, WidthState.JOINING_GROUP_ALEF),
-        (range(0x1780, 0x1783), WidthState.KHMER_COENG_ELIGIBLE_LETTER),
-        (range(0x1784, 0x1788), WidthState.KHMER_COENG_ELIGIBLE_LETTER),
-        (range(0x1789, 0x178D), WidthState.KHMER_COENG_ELIGIBLE_LETTER),
-        (range(0x178E, 0x1794), WidthState.KHMER_COENG_ELIGIBLE_LETTER),
-        (range(0x1795, 0x1799), WidthState.KHMER_COENG_ELIGIBLE_LETTER),
-        (range(0x179B, 0x179E), WidthState.KHMER_COENG_ELIGIBLE_LETTER),
-        (
-            [0x17A0, 0x17A2, 0x17A7, 0x17AB, 0x17AC, 0x17AF],
-            WidthState.KHMER_COENG_ELIGIBLE_LETTER,
-        ),
-        ([0x17A4], WidthState.WIDE),
-        ([0x17D8], WidthState.THREE),
-        ([0x1A10], WidthState.BUGINESE_LETTER_YA),
-        (range(0x2D31, 0x2D66), WidthState.TIFINAGH_CONSONANT),
-        ([0x2D6F], WidthState.TIFINAGH_CONSONANT),
-        ([0xA4FC], WidthState.LISU_TONE_LETTER_MYA_NA_JEU),
-        ([0xA4FD], WidthState.LISU_TONE_LETTER_MYA_NA_JEU),
-        ([0xFE0F], WidthState.VARIATION_SELECTOR_16),
-        ([0x10C03], WidthState.OLD_TURKIC_LETTER_ORKHON_I),
-        ([0x16D67], WidthState.KIRAT_RAI_VOWEL_SIGN_E),
-        ([0x16D68], WidthState.KIRAT_RAI_VOWEL_SIGN_AI),
-        (emoji_presentation, WidthState.EMOJI_PRESENTATION),
-        (emoji_modifiers, WidthState.EMOJI_MODIFIER),
-        (regional_indicators, WidthState.REGIONAL_INDICATOR),
-    ]:
-        for cp in cps:
-            not_ea[cp] = width
-            ea[cp] = width
-
-    ea[0x0338] = WidthState.COMBINING_LONG_SOLIDUS_OVERLAY
-    ea[0xFE00] = WidthState.VARIATION_SELECTOR_1_2_OR_3
-    ea[0xFE02] = WidthState.VARIATION_SELECTOR_1_2_OR_3
-
-    not_ea[0xFE01] = WidthState.VARIATION_SELECTOR_1_2_OR_3
-    not_ea[0xFE0E] = WidthState.VARIATION_SELECTOR_15
+    for cp, width in special_widths.non_cjk_only.items():
+        not_ea[cp] = width
 
     return (not_ea, ea)
 
@@ -389,7 +485,7 @@ def load_ligature_transparent() -> list[tuple[Codepoint, Codepoint]]:
     )
 
     default_ignorable_combinings = default_ignorables.intersection(combining_marks)
-    default_ignorable_combinings.add(0x200D)  # ZWJ
+    default_ignorable_combinings.add(find_codepoint("ZERO WIDTH JOINER"))
 
     return to_sorted_ranges(default_ignorable_combinings)
 
@@ -426,7 +522,9 @@ def load_solidus_transparent(
             num_chars = len(ccc_above_1)
 
     for cp in ccc_above_1:
-        if cp not in [0xFE00, 0xFE02, 0xFE0F]:
+        variation_rules = derive_variation_selector_rules()
+        excluded = variation_rules.cjk_only | variation_rules.common
+        if cp not in excluded:
             assert (
                 cjk_width_map[cp].table_width() != CharWidthInTable.SPECIAL
             ), f"U+{cp:X}"
@@ -436,35 +534,41 @@ def load_solidus_transparent(
 
 
 def load_emoji_presentation_sequences() -> list[Codepoint]:
+    selector = find_codepoint("VARIATION SELECTOR-16")
+    codepoints = []
     with fetch_open("emoji/emoji-variation-sequences.txt") as sequences:
-        sequence = re.compile(r"^([0-9A-F]+)\s+FE0F\s*;\s*emoji style")
-        codepoints = []
-        for line in sequences.readlines():
-            if match := sequence.match(line):
-                cp = int(match.group(1), 16)
-                codepoints.append(cp)
+        for line in sequences:
+            line = line.split("#", 1)[0].strip()
+            if not line:
+                continue
+            sequence_text, style = [part.strip() for part in line.split(";", 1)]
+            parts = [int(part, 16) for part in sequence_text.split()]
+            normalized_style = style.rstrip(";").strip()
+            if len(parts) == 2 and parts[1] == selector and normalized_style == "emoji style":
+                codepoints.append(parts[0])
     return codepoints
 
 
 def load_text_presentation_sequences() -> list[Codepoint]:
     text_presentation_seq_codepoints = set()
+    selector = find_codepoint("VARIATION SELECTOR-15")
     with fetch_open("emoji/emoji-variation-sequences.txt") as sequences:
-        sequence = re.compile(r"^([0-9A-F]+)\s+FE0E\s*;\s*text style")
-        for line in sequences.readlines():
-            if match := sequence.match(line):
-                cp = int(match.group(1), 16)
-                text_presentation_seq_codepoints.add(cp)
+        for line in sequences:
+            line = line.split("#", 1)[0].strip()
+            if not line:
+                continue
+            sequence_text, style = [part.strip() for part in line.split(";", 1)]
+            parts = [int(part, 16) for part in sequence_text.split()]
+            normalized_style = style.rstrip(";").strip()
+            if len(parts) == 2 and parts[1] == selector and normalized_style == "text style":
+                text_presentation_seq_codepoints.add(parts[0])
 
-    default_emoji_codepoints = set()
-    load_property(
-        "emoji/emoji-data.txt",
-        "Emoji_Presentation",
-        lambda cp: default_emoji_codepoints.add(cp),
-    )
+    default_emoji_codepoints = load_property_set("emoji/emoji-data.txt", "Emoji_Presentation")
+    enclosed_ideographic = codepoints_for_block("Enclosed Ideographic Supplement")
 
     codepoints = []
     for cp in text_presentation_seq_codepoints.intersection(default_emoji_codepoints):
-        if not cp in range(0x1F200, 0x1F300):
+        if cp not in enclosed_ideographic:
             codepoints.append(cp)
 
     codepoints.sort()
@@ -1117,6 +1221,13 @@ def generate(output_dir: str):
     # Print size info
     print("  ------------------------")
     total_size = 0
+
+    def index_key_bytes(indexes: list[tuple[int, int]]) -> int:
+        if not indexes:
+            return 0
+        max_prefix = max(prefix for prefix, _ in indexes)
+        return math.ceil(math.log(max_prefix, 256)) if max_prefix > 0 else 1
+
     for i, table in enumerate(tables):
         size_bytes = len(table.to_bytes())
         print(f"  Table {i} size: {size_bytes} bytes")
@@ -1125,10 +1236,10 @@ def generate(output_dir: str):
     for s, table in [
         ("Emoji presentation", emoji_presentation_table),
     ]:
-        index_size = len(table[0]) * (math.ceil(math.log(table[0][-1][0], 256)) + 8)
+        index_size = len(table[0]) * (index_key_bytes(table[0]) + 8)
         print(f"  {s} index size: {index_size} bytes")
         total_size += index_size
-        leaves_size = len(table[1]) * len(table[1][0])
+        leaves_size = len(table[1]) * (len(table[1][0]) if table[1] else 0)
         print(f"  {s} leaves size: {leaves_size} bytes")
         total_size += leaves_size
 
@@ -1136,7 +1247,7 @@ def generate(output_dir: str):
         ("Text presentation", text_presentation_table),
         ("Emoji modifier", emoji_modifier_table),
     ]:
-        index_size = len(table[0]) * (math.ceil(math.log(table[0][-1][0], 256)) + 16)
+        index_size = len(table[0]) * (index_key_bytes(table[0]) + 16)
         print(f"  {s} index size: {index_size} bytes")
         total_size += index_size
         leaves_size = 2 * sum(map(len, table[1]))

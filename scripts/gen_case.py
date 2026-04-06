@@ -3,9 +3,10 @@
 Reads CaseFolding.txt and emits ``unicode-case/src/map.cj``.
 """
 
+from dataclasses import dataclass
 from typing import IO
 
-from common import UNICODE_VERSION, fetch_open, emit_cangjie_file
+from common import BYTE_BITS, BYTE_MASK, fetch_open, emit_cangjie_file
 
 
 # ---------------------------------------------------------------------------
@@ -137,14 +138,15 @@ class Run:
             )
 
 
-# ---------------------------------------------------------------------------
-# Public entry point
-# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class CaseLookupLayout:
+    compact_lookup_last_high_byte: int
+    compact_lookup_max: int
+    bucket_count: int
+    high_runs: list[Run]
 
-def generate(output_dir: str):
-    """Download CaseFolding.txt and generate map.cj."""
-    print("=== Generating case table ===")
 
+def load_casefold_runs() -> list[Run]:
     with fetch_open("CaseFolding.txt") as txt:
         run_in_progress = None
         runs: list[Run] = []
@@ -165,13 +167,41 @@ def generate(output_dir: str):
                     run_in_progress = Run(map_from, map_tos)
         if run_in_progress:
             runs.append(run_in_progress)
+    return runs
 
-    high_runs = [r for r in runs if r.end > 0x2CFF]
+
+def derive_case_lookup_layout(runs: list[Run]) -> CaseLookupLayout:
+    uint16_max = (1 << (BYTE_BITS * 2)) - 1
+    compact_candidates = sorted({run.end >> BYTE_BITS for run in runs if run.end <= uint16_max})
+    gap_pairs = list(zip(compact_candidates, compact_candidates[1:]))
+    compact_lookup_last_high_byte = max(
+        gap_pairs,
+        key=lambda pair: (pair[1] - pair[0], pair[0]),
+    )[0]
+    compact_lookup_max = (compact_lookup_last_high_byte << BYTE_BITS) | BYTE_MASK
+    return CaseLookupLayout(
+        compact_lookup_last_high_byte=compact_lookup_last_high_byte,
+        compact_lookup_max=compact_lookup_max,
+        bucket_count=compact_lookup_last_high_byte + 1,
+        high_runs=[run for run in runs if run.end > compact_lookup_max],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+
+def generate(output_dir: str):
+    """Download CaseFolding.txt and generate map.cj."""
+    print("=== Generating case table ===")
+
+    runs = load_casefold_runs()
+    layout = derive_case_lookup_layout(runs)
 
     small_run_chunks: list[list[Run]] = []
-    for high_byte in range(0, 0x2D):
-        lo = high_byte << 8
-        hi = lo + 255
+    for high_byte in range(layout.bucket_count):
+        lo = high_byte << BYTE_BITS
+        hi = lo | BYTE_MASK
         chunk = [sub for r in runs if (sub := r.limit_to_range(lo, hi)) is not None]
         small_run_chunks.append(chunk)
 
@@ -181,7 +211,7 @@ def generate(output_dir: str):
         out.write("package unicode_case\n\n")
         out.write("func lookup(orig: Rune): Fold {\n")
         out.write("    let from32 = UInt32(orig)\n")
-        out.write("    if (from32 <= 0x2CFFu32) {\n")
+        out.write(f"    if (from32 <= 0x{layout.compact_lookup_max:04X}u32) {{\n")
         out.write("        let from16 = UInt16(from32)\n")
         out.write("        let highByte = UInt8(from16 >> 8)\n")
         out.write("        let lowByte = UInt8(from16 & 0xFFu16)\n")
@@ -202,7 +232,7 @@ def generate(output_dir: str):
         out.write("        Fold.One(Rune(UInt32(singleChar)))\n")
         out.write("    } else {\n")
         out.write("        let singleChar32: UInt32 = match (from32) {\n")
-        for r in high_runs:
+        for r in layout.high_runs:
             r.dump_cangjie(out, is_high=True)
         out.write("            case _ => from32\n")
         out.write("        }\n")
