@@ -7,9 +7,9 @@ enums, data loading, table building, and Cangjie emission functions.
 import enum
 import math
 import operator
-import re
 from collections import defaultdict
 from dataclasses import dataclass
+from functools import cache
 from itertools import batched
 from typing import Iterable, IO
 
@@ -20,9 +20,9 @@ from common import (
     fetch_open,
     find_codepoint,
     find_codepoints_by_name_regex,
-    find_codepoints_by_predicate,
     find_codepoints_with_canonical_decomposition,
     find_codepoints_with_canonical_decomposition_suffix,
+    iter_property_entries,
     load_property_set,
     load_unicode_data,
     load_unicode_version,
@@ -233,20 +233,8 @@ def derive_zero_width_rule_sets() -> ZeroWidthRuleSets:
         "Prepend",
     ) - load_property_set("PropList.txt", "Prepended_Concatenation_Mark")
 
-    zero_width_cf_marks = find_codepoints_by_predicate(
-        lambda record: record.general_category == "Cf"
-        and (
-            record.name.endswith("ABOVE")
-            or record.name in {
-                "SYRIAC ABBREVIATION MARK",
-                "ARABIC DISPUTED END OF AYAH",
-            }
-        )
-    )
-
     return ZeroWidthRuleSets(
         force_zero=prepend_without_pcm
-        | zero_width_cf_marks
         | _codepoints_named("DEVANAGARI CARET"),
         force_non_zero=_codepoints_named(
             "HANGUL CHOSEONG FILLER",
@@ -255,6 +243,7 @@ def derive_zero_width_rule_sets() -> ZeroWidthRuleSets:
     )
 
 
+@cache
 def derive_variation_selector_rules() -> VariationSelectorRuleSets:
     return VariationSelectorRuleSets(
         common=_codepoints_named("VARIATION SELECTOR-16"),
@@ -303,10 +292,11 @@ def derive_special_widths() -> SpecialWidthRuleSets:
         cjk_only[cp] = WidthState.VARIATION_SELECTOR_1_2_OR_3
     for cp in variation_rules.common:
         common[cp] = WidthState.VARIATION_SELECTOR_16
+    vs15 = find_codepoint("VARIATION SELECTOR-15")
     for cp in variation_rules.non_cjk_only:
         non_cjk_only[cp] = (
             WidthState.VARIATION_SELECTOR_15
-            if cp == find_codepoint("VARIATION SELECTOR-15")
+            if cp == vs15
             else WidthState.VARIATION_SELECTOR_1_2_OR_3
         )
 
@@ -323,36 +313,17 @@ def derive_special_widths() -> SpecialWidthRuleSets:
 
 
 def load_east_asian_widths() -> list[EastAsianWidth]:
-    with fetch_open("EastAsianWidth.txt") as eaw:
-        single = re.compile(r"^([0-9A-F]+)\s*;\s*(\w+) +# (\w+)")
-        multiple = re.compile(r"^([0-9A-F]+)\.\.([0-9A-F]+)\s*;\s*(\w+) +# (\w+)")
-        width_codes = {
-            **{c: EastAsianWidth.NARROW for c in ["N", "Na", "H"]},
-            **{c: EastAsianWidth.WIDE for c in ["W", "F"]},
-            "A": EastAsianWidth.AMBIGUOUS,
-        }
+    width_codes = {
+        **{c: EastAsianWidth.NARROW for c in ["N", "Na", "H"]},
+        **{c: EastAsianWidth.WIDE for c in ["W", "F"]},
+        "A": EastAsianWidth.AMBIGUOUS,
+    }
 
-        width_map = []
-        current = 0
-        for line in eaw.readlines():
-            raw_data = None
-            if match := single.match(line):
-                raw_data = (match.group(1), match.group(1), match.group(2))
-            elif match := multiple.match(line):
-                raw_data = (match.group(1), match.group(2), match.group(3))
-            else:
-                continue
-            low = int(raw_data[0], 16)
-            high = int(raw_data[1], 16)
-            width = width_codes[raw_data[2]]
-
-            assert current <= high
-            while current <= high:
-                width_map.append(EastAsianWidth.NARROW if current < low else width)
-                current += 1
-
-        while len(width_map) < NUM_CODEPOINTS:
-            width_map.append(EastAsianWidth.NARROW)
+    width_map = [EastAsianWidth.NARROW] * NUM_CODEPOINTS
+    for low, high, value in iter_property_entries("EastAsianWidth.txt"):
+        w = width_codes[value]
+        for cp in range(low, high + 1):
+            width_map[cp] = w
 
     load_property(
         "LineBreak.txt",
@@ -470,24 +441,17 @@ def load_non_transparent_zero_widths(
 
 
 def load_ligature_transparent() -> list[tuple[Codepoint, Codepoint]]:
-    default_ignorables = set()
-    load_property(
-        "DerivedCoreProperties.txt",
-        "Default_Ignorable_Code_Point",
-        lambda cp: default_ignorables.add(cp),
+    default_ignorables = load_property_set("DerivedCoreProperties.txt", "Default_Ignorable_Code_Point")
+    combining_marks = (
+        load_property_set("extracted/DerivedGeneralCategory.txt", "Mc")
+        | load_property_set("extracted/DerivedGeneralCategory.txt", "Mn")
+        | load_property_set("extracted/DerivedGeneralCategory.txt", "Me")
     )
 
-    combining_marks = set()
-    load_property(
-        "extracted/DerivedGeneralCategory.txt",
-        "(?:Mc|Mn|Me)",
-        lambda cp: combining_marks.add(cp),
-    )
+    result = default_ignorables & combining_marks
+    result.add(find_codepoint("ZERO WIDTH JOINER"))
 
-    default_ignorable_combinings = default_ignorables.intersection(combining_marks)
-    default_ignorable_combinings.add(find_codepoint("ZERO WIDTH JOINER"))
-
-    return to_sorted_ranges(default_ignorable_combinings)
+    return to_sorted_ranges(result)
 
 
 def load_solidus_transparent(
@@ -505,85 +469,74 @@ def load_solidus_transparent(
         for cp in range(lo, hi + 1):
             ccc_above_1.add(cp)
 
-    num_chars = len(ccc_above_1)
-
+    canonical_decomp_records = [
+        r for r in load_unicode_data().values()
+        if r.decomposition and r.decomposition_type is None
+    ]
     while True:
-        with fetch_open("UnicodeData.txt") as udata:
-            single = re.compile(r"([0-9A-Z]+);.*?;.*?;.*?;.*?;([0-9A-F ]+);")
-            for line in udata.readlines():
-                if match := single.match(line):
-                    composed = int(match.group(1), 16)
-                    decomposed = [int(c, 16) for c in match.group(2).split(" ")]
-                    if all([c in ccc_above_1 for c in decomposed]):
-                        ccc_above_1.add(composed)
-        if len(ccc_above_1) == num_chars:
+        prev_size = len(ccc_above_1)
+        for record in canonical_decomp_records:
+            if all(c in ccc_above_1 for c in record.decomposition):
+                ccc_above_1.add(record.codepoint)
+        if len(ccc_above_1) == prev_size:
             break
-        else:
-            num_chars = len(ccc_above_1)
 
+    variation_rules = derive_variation_selector_rules()
+    excluded = variation_rules.cjk_only | variation_rules.common
     for cp in ccc_above_1:
-        variation_rules = derive_variation_selector_rules()
-        excluded = variation_rules.cjk_only | variation_rules.common
         if cp not in excluded:
             assert (
                 cjk_width_map[cp].table_width() != CharWidthInTable.SPECIAL
             ), f"U+{cp:X}"
 
+    ligature_set = set(ligature_transparents)
     sorted_ranges = to_sorted_ranges(ccc_above_1)
-    return list(filter(lambda r: r not in ligature_transparents, sorted_ranges))
+    return [r for r in sorted_ranges if r not in ligature_set]
+
+
+def _load_variation_sequences(selector_name: str, style_label: str) -> set[Codepoint]:
+    selector = find_codepoint(selector_name)
+    codepoints: set[Codepoint] = set()
+    with fetch_open("emoji/emoji-variation-sequences.txt") as sequences:
+        for line in sequences:
+            line = line.split("#", 1)[0].strip()
+            if not line:
+                continue
+            sequence_text, style = [part.strip() for part in line.split(";", 1)]
+            parts = [int(part, 16) for part in sequence_text.split()]
+            if len(parts) == 2 and parts[1] == selector and style.rstrip(";").strip() == style_label:
+                codepoints.add(parts[0])
+    return codepoints
 
 
 def load_emoji_presentation_sequences() -> list[Codepoint]:
-    selector = find_codepoint("VARIATION SELECTOR-16")
-    codepoints = []
-    with fetch_open("emoji/emoji-variation-sequences.txt") as sequences:
-        for line in sequences:
-            line = line.split("#", 1)[0].strip()
-            if not line:
-                continue
-            sequence_text, style = [part.strip() for part in line.split(";", 1)]
-            parts = [int(part, 16) for part in sequence_text.split()]
-            normalized_style = style.rstrip(";").strip()
-            if len(parts) == 2 and parts[1] == selector and normalized_style == "emoji style":
-                codepoints.append(parts[0])
-    return codepoints
+    return sorted(_load_variation_sequences("VARIATION SELECTOR-16", "emoji style"))
 
 
 def load_text_presentation_sequences() -> list[Codepoint]:
-    text_presentation_seq_codepoints = set()
-    selector = find_codepoint("VARIATION SELECTOR-15")
-    with fetch_open("emoji/emoji-variation-sequences.txt") as sequences:
-        for line in sequences:
-            line = line.split("#", 1)[0].strip()
-            if not line:
-                continue
-            sequence_text, style = [part.strip() for part in line.split(";", 1)]
-            parts = [int(part, 16) for part in sequence_text.split()]
-            normalized_style = style.rstrip(";").strip()
-            if len(parts) == 2 and parts[1] == selector and normalized_style == "text style":
-                text_presentation_seq_codepoints.add(parts[0])
-
-    default_emoji_codepoints = load_property_set("emoji/emoji-data.txt", "Emoji_Presentation")
+    text_seq = _load_variation_sequences("VARIATION SELECTOR-15", "text style")
+    default_emoji = load_property_set("emoji/emoji-data.txt", "Emoji_Presentation")
     enclosed_ideographic = codepoints_for_block("Enclosed Ideographic Supplement")
-
-    codepoints = []
-    for cp in text_presentation_seq_codepoints.intersection(default_emoji_codepoints):
-        if cp not in enclosed_ideographic:
-            codepoints.append(cp)
-
-    codepoints.sort()
-    return codepoints
+    return sorted(text_seq & default_emoji - enclosed_ideographic)
 
 
 def load_emoji_modifier_bases() -> list[Codepoint]:
-    ret = []
-    load_property(
-        "emoji/emoji-data.txt",
-        "Emoji_Modifier_Base",
-        lambda cp: ret.append(cp),
-    )
-    ret.sort()
-    return ret
+    return sorted(load_property_set("emoji/emoji-data.txt", "Emoji_Modifier_Base"))
+
+
+def _dedup_leaves(indexes: list[tuple[int, int]], leaves: list) -> None:
+    i = 0
+    while i < len(leaves):
+        first_idx = leaves.index(leaves[i])
+        if first_idx == i:
+            i += 1
+        else:
+            for j in range(len(indexes)):
+                if indexes[j][1] == i:
+                    indexes[j] = (indexes[j][0], first_idx)
+                elif indexes[j][1] > i:
+                    indexes[j] = (indexes[j][0], indexes[j][1] - 1)
+            leaves.pop(i)
 
 
 def make_presentation_sequence_table(
@@ -605,20 +558,7 @@ def make_presentation_sequence_table(
         leaves.append(leaf)
 
     indexes = [(msb, index) for (index, msb) in enumerate(msbs)]
-
-    i = 0
-    while i < len(leaves):
-        first_idx = leaves.index(leaves[i])
-        if first_idx == i:
-            i += 1
-        else:
-            for j in range(0, len(indexes)):
-                if indexes[j][1] == i:
-                    indexes[j] = (indexes[j][0], first_idx)
-                elif indexes[j][1] > i:
-                    indexes[j] = (indexes[j][0], indexes[j][1] - 1)
-            leaves.pop(i)
-
+    _dedup_leaves(indexes, leaves)
     return (indexes, leaves)
 
 
@@ -642,20 +582,7 @@ def make_ranges_table(
         leaves.append(leaf)
 
     indexes = [(msb, index) for (index, msb) in enumerate(msbs)]
-
-    i = 0
-    while i < len(leaves):
-        first_idx = leaves.index(leaves[i])
-        if first_idx == i:
-            i += 1
-        else:
-            for j in range(0, len(indexes)):
-                if indexes[j][1] == i:
-                    indexes[j] = (indexes[j][0], first_idx)
-                elif indexes[j][1] > i:
-                    indexes[j] = (indexes[j][0], indexes[j][1] - 1)
-            leaves.pop(i)
-
+    _dedup_leaves(indexes, leaves)
     return (indexes, leaves)
 
 

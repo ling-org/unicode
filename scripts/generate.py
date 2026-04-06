@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 import gen_case
 import gen_width
-from common import get_cache_dir
+from common import get_cache_dir, format_emitted_files
 
 
 def main():
@@ -25,6 +25,7 @@ def main():
     print(f"Cache directory: {get_cache_dir()}")
     gen_case.generate(output_dir)
     gen_width.generate(output_dir)
+    format_emitted_files()
     print("\nDone.")
 
 

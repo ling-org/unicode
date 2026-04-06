@@ -9,129 +9,129 @@ func lookup(orig: Rune): Fold {
         let lowByte = UInt8(from16 & 0xFFu16)
         let singleChar: UInt16 = match (highByte) {
             case 0x00u8 => match (lowByte) {
-                    case x where (0x41u8 <= x && x <= 0x5Au8) => UInt16(x) + 0x0020u16
-                    case 0xB5u8 => 0x03BCu16
-                    case x where (0xC0u8 <= x && x <= 0xD6u8) => UInt16(x) + 0x0020u16
-                    case x where (0xD8u8 <= x && x <= 0xDEu8) => UInt16(x) + 0x0020u16
-                    case 0xDFu8 => return Fold.Two(Rune(0x0073u32), Rune(0x0073u32))
-                    case _ => from16
-                }
+                case x where (0x41u8 <= x && x <= 0x5Au8) => UInt16(x) + 0x0020u16
+                case 0xB5u8 => 0x03BCu16
+                case x where (0xC0u8 <= x && x <= 0xD6u8) => UInt16(x) + 0x0020u16
+                case x where (0xD8u8 <= x && x <= 0xDEu8) => UInt16(x) + 0x0020u16
+                case 0xDFu8 => return Fold.Two(Rune(0x0073u32), Rune(0x0073u32))
+                case _ => from16
+            }
             case 0x01u8 => match (lowByte) {
-                    case x where (x <= 0x2Eu8) => UInt16(x) | 0x01u16
-                    case 0x30u8 => return Fold.Two(Rune(0x0069u32), Rune(0x0307u32))
-                    case x where (0x32u8 <= x && x <= 0x36u8) => UInt16(x) | 0x01u16
-                    case x where (0x39u8 <= x && x <= 0x47u8) => (UInt16(x) + 1u16) & 0xFFFEu16
-                    case 0x49u8 => return Fold.Two(Rune(0x02BCu32), Rune(0x006Eu32))
-                    case x where (0x4Au8 <= x && x <= 0x76u8) => UInt16(x) | 0x01u16
-                    case 0x78u8 => 0x00FFu16
-                    case x where (0x79u8 <= x && x <= 0x7Du8) => (UInt16(x) + 1u16) & 0xFFFEu16
-                    case 0x7Fu8 => 0x0073u16
-                    case 0x81u8 => 0x0253u16
-                    case x where (0x82u8 <= x && x <= 0x84u8) => UInt16(x) | 0x01u16
-                    case 0x86u8 => 0x0254u16
-                    case 0x87u8 => 0x0188u16
-                    case x where (0x89u8 <= x && x <= 0x8Au8) => UInt16(x) + 0x00CDu16
-                    case 0x8Bu8 => 0x018Cu16
-                    case 0x8Eu8 => 0x01DDu16
-                    case 0x8Fu8 => 0x0259u16
-                    case 0x90u8 => 0x025Bu16
-                    case 0x91u8 => 0x0192u16
-                    case 0x93u8 => 0x0260u16
-                    case 0x94u8 => 0x0263u16
-                    case 0x96u8 => 0x0269u16
-                    case 0x97u8 => 0x0268u16
-                    case 0x98u8 => 0x0199u16
-                    case 0x9Cu8 => 0x026Fu16
-                    case 0x9Du8 => 0x0272u16
-                    case 0x9Fu8 => 0x0275u16
-                    case x where (0xA0u8 <= x && x <= 0xA4u8) => UInt16(x) | 0x01u16
-                    case 0xA6u8 => 0x0280u16
-                    case 0xA7u8 => 0x01A8u16
-                    case 0xA9u8 => 0x0283u16
-                    case 0xACu8 => 0x01ADu16
-                    case 0xAEu8 => 0x0288u16
-                    case 0xAFu8 => 0x01B0u16
-                    case x where (0xB1u8 <= x && x <= 0xB2u8) => UInt16(x) + 0x00D9u16
-                    case x where (0xB3u8 <= x && x <= 0xB5u8) => (UInt16(x) + 1u16) & 0xFFFEu16
-                    case 0xB7u8 => 0x0292u16
-                    case 0xB8u8 => 0x01B9u16
-                    case 0xBCu8 => 0x01BDu16
-                    case 0xC4u8 => 0x01C6u16
-                    case 0xC5u8 => 0x01C6u16
-                    case 0xC7u8 => 0x01C9u16
-                    case 0xC8u8 => 0x01C9u16
-                    case 0xCAu8 => 0x01CCu16
-                    case x where (0xCBu8 <= x && x <= 0xDBu8) => (UInt16(x) + 1u16) & 0xFFFEu16
-                    case x where (0xDEu8 <= x && x <= 0xEEu8) => UInt16(x) | 0x01u16
-                    case 0xF0u8 => return Fold.Two(Rune(0x006Au32), Rune(0x030Cu32))
-                    case 0xF1u8 => 0x01F3u16
-                    case x where (0xF2u8 <= x && x <= 0xF4u8) => UInt16(x) | 0x01u16
-                    case 0xF6u8 => 0x0195u16
-                    case 0xF7u8 => 0x01BFu16
-                    case x where (0xF8u8 <= x) => UInt16(x) | 0x01u16
-                    case _ => from16
-                }
+                case x where (x <= 0x2Eu8) => UInt16(x) | 0x01u16
+                case 0x30u8 => return Fold.Two(Rune(0x0069u32), Rune(0x0307u32))
+                case x where (0x32u8 <= x && x <= 0x36u8) => UInt16(x) | 0x01u16
+                case x where (0x39u8 <= x && x <= 0x47u8) => (UInt16(x) + 1u16) & 0xFFFEu16
+                case 0x49u8 => return Fold.Two(Rune(0x02BCu32), Rune(0x006Eu32))
+                case x where (0x4Au8 <= x && x <= 0x76u8) => UInt16(x) | 0x01u16
+                case 0x78u8 => 0x00FFu16
+                case x where (0x79u8 <= x && x <= 0x7Du8) => (UInt16(x) + 1u16) & 0xFFFEu16
+                case 0x7Fu8 => 0x0073u16
+                case 0x81u8 => 0x0253u16
+                case x where (0x82u8 <= x && x <= 0x84u8) => UInt16(x) | 0x01u16
+                case 0x86u8 => 0x0254u16
+                case 0x87u8 => 0x0188u16
+                case x where (0x89u8 <= x && x <= 0x8Au8) => UInt16(x) + 0x00CDu16
+                case 0x8Bu8 => 0x018Cu16
+                case 0x8Eu8 => 0x01DDu16
+                case 0x8Fu8 => 0x0259u16
+                case 0x90u8 => 0x025Bu16
+                case 0x91u8 => 0x0192u16
+                case 0x93u8 => 0x0260u16
+                case 0x94u8 => 0x0263u16
+                case 0x96u8 => 0x0269u16
+                case 0x97u8 => 0x0268u16
+                case 0x98u8 => 0x0199u16
+                case 0x9Cu8 => 0x026Fu16
+                case 0x9Du8 => 0x0272u16
+                case 0x9Fu8 => 0x0275u16
+                case x where (0xA0u8 <= x && x <= 0xA4u8) => UInt16(x) | 0x01u16
+                case 0xA6u8 => 0x0280u16
+                case 0xA7u8 => 0x01A8u16
+                case 0xA9u8 => 0x0283u16
+                case 0xACu8 => 0x01ADu16
+                case 0xAEu8 => 0x0288u16
+                case 0xAFu8 => 0x01B0u16
+                case x where (0xB1u8 <= x && x <= 0xB2u8) => UInt16(x) + 0x00D9u16
+                case x where (0xB3u8 <= x && x <= 0xB5u8) => (UInt16(x) + 1u16) & 0xFFFEu16
+                case 0xB7u8 => 0x0292u16
+                case 0xB8u8 => 0x01B9u16
+                case 0xBCu8 => 0x01BDu16
+                case 0xC4u8 => 0x01C6u16
+                case 0xC5u8 => 0x01C6u16
+                case 0xC7u8 => 0x01C9u16
+                case 0xC8u8 => 0x01C9u16
+                case 0xCAu8 => 0x01CCu16
+                case x where (0xCBu8 <= x && x <= 0xDBu8) => (UInt16(x) + 1u16) & 0xFFFEu16
+                case x where (0xDEu8 <= x && x <= 0xEEu8) => UInt16(x) | 0x01u16
+                case 0xF0u8 => return Fold.Two(Rune(0x006Au32), Rune(0x030Cu32))
+                case 0xF1u8 => 0x01F3u16
+                case x where (0xF2u8 <= x && x <= 0xF4u8) => UInt16(x) | 0x01u16
+                case 0xF6u8 => 0x0195u16
+                case 0xF7u8 => 0x01BFu16
+                case x where (0xF8u8 <= x) => UInt16(x) | 0x01u16
+                case _ => from16
+            }
             case 0x02u8 => match (lowByte) {
-                    case x where (x <= 0x1Eu8) => UInt16(x) | 0x01u16
-                    case 0x20u8 => 0x019Eu16
-                    case x where (0x22u8 <= x && x <= 0x32u8) => UInt16(x) | 0x01u16
-                    case 0x3Au8 => 0x2C65u16
-                    case 0x3Bu8 => 0x023Cu16
-                    case 0x3Du8 => 0x019Au16
-                    case 0x3Eu8 => 0x2C66u16
-                    case 0x41u8 => 0x0242u16
-                    case 0x43u8 => 0x0180u16
-                    case 0x44u8 => 0x0289u16
-                    case 0x45u8 => 0x028Cu16
-                    case x where (0x46u8 <= x && x <= 0x4Eu8) => UInt16(x) | 0x01u16
-                    case _ => from16
-                }
+                case x where (x <= 0x1Eu8) => UInt16(x) | 0x01u16
+                case 0x20u8 => 0x019Eu16
+                case x where (0x22u8 <= x && x <= 0x32u8) => UInt16(x) | 0x01u16
+                case 0x3Au8 => 0x2C65u16
+                case 0x3Bu8 => 0x023Cu16
+                case 0x3Du8 => 0x019Au16
+                case 0x3Eu8 => 0x2C66u16
+                case 0x41u8 => 0x0242u16
+                case 0x43u8 => 0x0180u16
+                case 0x44u8 => 0x0289u16
+                case 0x45u8 => 0x028Cu16
+                case x where (0x46u8 <= x && x <= 0x4Eu8) => UInt16(x) | 0x01u16
+                case _ => from16
+            }
             case 0x03u8 => match (lowByte) {
-                    case 0x45u8 => 0x03B9u16
-                    case x where (0x70u8 <= x && x <= 0x72u8) => UInt16(x) | 0x01u16
-                    case 0x76u8 => 0x0377u16
-                    case 0x7Fu8 => 0x03F3u16
-                    case 0x86u8 => 0x03ACu16
-                    case x where (0x88u8 <= x && x <= 0x8Au8) => UInt16(x) + 0x0025u16
-                    case 0x8Cu8 => 0x03CCu16
-                    case x where (0x8Eu8 <= x && x <= 0x8Fu8) => UInt16(x) + 0x003Fu16
-                    case 0x90u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0301u32))
-                    case x where (0x91u8 <= x && x <= 0xA1u8) => UInt16(x) + 0x0020u16
-                    case x where (0xA3u8 <= x && x <= 0xABu8) => UInt16(x) + 0x0020u16
-                    case 0xB0u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0301u32))
-                    case 0xC2u8 => 0x03C3u16
-                    case 0xCFu8 => 0x03D7u16
-                    case 0xD0u8 => 0x03B2u16
-                    case 0xD1u8 => 0x03B8u16
-                    case 0xD5u8 => 0x03C6u16
-                    case 0xD6u8 => 0x03C0u16
-                    case x where (0xD8u8 <= x && x <= 0xEEu8) => UInt16(x) | 0x01u16
-                    case 0xF0u8 => 0x03BAu16
-                    case 0xF1u8 => 0x03C1u16
-                    case 0xF4u8 => 0x03B8u16
-                    case 0xF5u8 => 0x03B5u16
-                    case 0xF7u8 => 0x03F8u16
-                    case 0xF9u8 => 0x03F2u16
-                    case 0xFAu8 => 0x03FBu16
-                    case x where (0xFDu8 <= x) => UInt16(x) - 0x0082u16
-                    case _ => from16
-                }
+                case 0x45u8 => 0x03B9u16
+                case x where (0x70u8 <= x && x <= 0x72u8) => UInt16(x) | 0x01u16
+                case 0x76u8 => 0x0377u16
+                case 0x7Fu8 => 0x03F3u16
+                case 0x86u8 => 0x03ACu16
+                case x where (0x88u8 <= x && x <= 0x8Au8) => UInt16(x) + 0x0025u16
+                case 0x8Cu8 => 0x03CCu16
+                case x where (0x8Eu8 <= x && x <= 0x8Fu8) => UInt16(x) + 0x003Fu16
+                case 0x90u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0301u32))
+                case x where (0x91u8 <= x && x <= 0xA1u8) => UInt16(x) + 0x0020u16
+                case x where (0xA3u8 <= x && x <= 0xABu8) => UInt16(x) + 0x0020u16
+                case 0xB0u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0301u32))
+                case 0xC2u8 => 0x03C3u16
+                case 0xCFu8 => 0x03D7u16
+                case 0xD0u8 => 0x03B2u16
+                case 0xD1u8 => 0x03B8u16
+                case 0xD5u8 => 0x03C6u16
+                case 0xD6u8 => 0x03C0u16
+                case x where (0xD8u8 <= x && x <= 0xEEu8) => UInt16(x) | 0x01u16
+                case 0xF0u8 => 0x03BAu16
+                case 0xF1u8 => 0x03C1u16
+                case 0xF4u8 => 0x03B8u16
+                case 0xF5u8 => 0x03B5u16
+                case 0xF7u8 => 0x03F8u16
+                case 0xF9u8 => 0x03F2u16
+                case 0xFAu8 => 0x03FBu16
+                case x where (0xFDu8 <= x) => UInt16(x) - 0x0082u16
+                case _ => from16
+            }
             case 0x04u8 => match (lowByte) {
-                    case x where (x <= 0x0Fu8) => UInt16(x) + 0x0050u16
-                    case x where (0x10u8 <= x && x <= 0x2Fu8) => UInt16(x) + 0x0020u16
-                    case x where (0x60u8 <= x && x <= 0x80u8) => UInt16(x) | 0x01u16
-                    case x where (0x8Au8 <= x && x <= 0xBEu8) => UInt16(x) | 0x01u16
-                    case 0xC0u8 => 0x04CFu16
-                    case x where (0xC1u8 <= x && x <= 0xCDu8) => (UInt16(x) + 1u16) & 0xFFFEu16
-                    case x where (0xD0u8 <= x) => UInt16(x) | 0x01u16
-                    case _ => from16
-                }
+                case x where (x <= 0x0Fu8) => UInt16(x) + 0x0050u16
+                case x where (0x10u8 <= x && x <= 0x2Fu8) => UInt16(x) + 0x0020u16
+                case x where (0x60u8 <= x && x <= 0x80u8) => UInt16(x) | 0x01u16
+                case x where (0x8Au8 <= x && x <= 0xBEu8) => UInt16(x) | 0x01u16
+                case 0xC0u8 => 0x04CFu16
+                case x where (0xC1u8 <= x && x <= 0xCDu8) => (UInt16(x) + 1u16) & 0xFFFEu16
+                case x where (0xD0u8 <= x) => UInt16(x) | 0x01u16
+                case _ => from16
+            }
             case 0x05u8 => match (lowByte) {
-                    case x where (x <= 0x2Eu8) => UInt16(x) | 0x01u16
-                    case x where (0x31u8 <= x && x <= 0x56u8) => UInt16(x) + 0x0030u16
-                    case 0x87u8 => return Fold.Two(Rune(0x0565u32), Rune(0x0582u32))
-                    case _ => from16
-                }
+                case x where (x <= 0x2Eu8) => UInt16(x) | 0x01u16
+                case x where (0x31u8 <= x && x <= 0x56u8) => UInt16(x) + 0x0030u16
+                case 0x87u8 => return Fold.Two(Rune(0x0565u32), Rune(0x0582u32))
+                case _ => from16
+            }
             case 0x06u8 => from16
             case 0x07u8 => from16
             case 0x08u8 => from16
@@ -143,17 +143,17 @@ func lookup(orig: Rune): Fold {
             case 0x0Eu8 => from16
             case 0x0Fu8 => from16
             case 0x10u8 => match (lowByte) {
-                    case x where (0xA0u8 <= x && x <= 0xC5u8) => UInt16(x) + 0x1C60u16
-                    case 0xC7u8 => 0x2D27u16
-                    case 0xCDu8 => 0x2D2Du16
-                    case _ => from16
-                }
+                case x where (0xA0u8 <= x && x <= 0xC5u8) => UInt16(x) + 0x1C60u16
+                case 0xC7u8 => 0x2D27u16
+                case 0xCDu8 => 0x2D2Du16
+                case _ => from16
+            }
             case 0x11u8 => from16
             case 0x12u8 => from16
             case 0x13u8 => match (lowByte) {
-                    case x where (0xF8u8 <= x && x <= 0xFDu8) => UInt16(x) - 0x0008u16
-                    case _ => from16
-                }
+                case x where (0xF8u8 <= x && x <= 0xFDu8) => UInt16(x) - 0x0008u16
+                case _ => from16
+            }
             case 0x14u8 => from16
             case 0x15u8 => from16
             case 0x16u8 => from16
@@ -163,153 +163,153 @@ func lookup(orig: Rune): Fold {
             case 0x1Au8 => from16
             case 0x1Bu8 => from16
             case 0x1Cu8 => match (lowByte) {
-                    case 0x80u8 => 0x0432u16
-                    case 0x81u8 => 0x0434u16
-                    case 0x82u8 => 0x043Eu16
-                    case x where (0x83u8 <= x && x <= 0x84u8) => UInt16(x) - 0x1842u16
-                    case 0x85u8 => 0x0442u16
-                    case 0x86u8 => 0x044Au16
-                    case 0x87u8 => 0x0463u16
-                    case 0x88u8 => 0xA64Bu16
-                    case 0x89u8 => 0x1C8Au16
-                    case x where (0x90u8 <= x && x <= 0xBAu8) => UInt16(x) - 0x0BC0u16
-                    case x where (0xBDu8 <= x && x <= 0xBFu8) => UInt16(x) - 0x0BC0u16
-                    case _ => from16
-                }
+                case 0x80u8 => 0x0432u16
+                case 0x81u8 => 0x0434u16
+                case 0x82u8 => 0x043Eu16
+                case x where (0x83u8 <= x && x <= 0x84u8) => UInt16(x) - 0x1842u16
+                case 0x85u8 => 0x0442u16
+                case 0x86u8 => 0x044Au16
+                case 0x87u8 => 0x0463u16
+                case 0x88u8 => 0xA64Bu16
+                case 0x89u8 => 0x1C8Au16
+                case x where (0x90u8 <= x && x <= 0xBAu8) => UInt16(x) - 0x0BC0u16
+                case x where (0xBDu8 <= x && x <= 0xBFu8) => UInt16(x) - 0x0BC0u16
+                case _ => from16
+            }
             case 0x1Du8 => from16
             case 0x1Eu8 => match (lowByte) {
-                    case x where (x <= 0x94u8) => UInt16(x) | 0x01u16
-                    case 0x96u8 => return Fold.Two(Rune(0x0068u32), Rune(0x0331u32))
-                    case 0x97u8 => return Fold.Two(Rune(0x0074u32), Rune(0x0308u32))
-                    case 0x98u8 => return Fold.Two(Rune(0x0077u32), Rune(0x030Au32))
-                    case 0x99u8 => return Fold.Two(Rune(0x0079u32), Rune(0x030Au32))
-                    case 0x9Au8 => return Fold.Two(Rune(0x0061u32), Rune(0x02BEu32))
-                    case 0x9Bu8 => 0x1E61u16
-                    case 0x9Eu8 => return Fold.Two(Rune(0x0073u32), Rune(0x0073u32))
-                    case x where (0xA0u8 <= x && x <= 0xFEu8) => UInt16(x) | 0x01u16
-                    case _ => from16
-                }
+                case x where (x <= 0x94u8) => UInt16(x) | 0x01u16
+                case 0x96u8 => return Fold.Two(Rune(0x0068u32), Rune(0x0331u32))
+                case 0x97u8 => return Fold.Two(Rune(0x0074u32), Rune(0x0308u32))
+                case 0x98u8 => return Fold.Two(Rune(0x0077u32), Rune(0x030Au32))
+                case 0x99u8 => return Fold.Two(Rune(0x0079u32), Rune(0x030Au32))
+                case 0x9Au8 => return Fold.Two(Rune(0x0061u32), Rune(0x02BEu32))
+                case 0x9Bu8 => 0x1E61u16
+                case 0x9Eu8 => return Fold.Two(Rune(0x0073u32), Rune(0x0073u32))
+                case x where (0xA0u8 <= x && x <= 0xFEu8) => UInt16(x) | 0x01u16
+                case _ => from16
+            }
             case 0x1Fu8 => match (lowByte) {
-                    case x where (0x08u8 <= x && x <= 0x0Fu8) => UInt16(x) - 0x0008u16
-                    case x where (0x18u8 <= x && x <= 0x1Du8) => UInt16(x) - 0x0008u16
-                    case x where (0x28u8 <= x && x <= 0x2Fu8) => UInt16(x) - 0x0008u16
-                    case x where (0x38u8 <= x && x <= 0x3Fu8) => UInt16(x) - 0x0008u16
-                    case x where (0x48u8 <= x && x <= 0x4Du8) => UInt16(x) - 0x0008u16
-                    case 0x50u8 => return Fold.Two(Rune(0x03C5u32), Rune(0x0313u32))
-                    case 0x52u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0313u32), Rune(0x0300u32))
-                    case 0x54u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0313u32), Rune(0x0301u32))
-                    case 0x56u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0313u32), Rune(0x0342u32))
-                    case x where (0x59u8 <= x && x <= 0x5Fu8) =>
-                        if ((UInt16(x) & 1u16) == 1u16) {
-                            UInt16(x) - 0x0008u16
-                        } else {
-                            UInt16(x)
-                        }
-                    case x where (0x68u8 <= x && x <= 0x6Fu8) => UInt16(x) - 0x0008u16
-                    case 0x80u8 => return Fold.Two(Rune(0x1F00u32), Rune(0x03B9u32))
-                    case 0x81u8 => return Fold.Two(Rune(0x1F01u32), Rune(0x03B9u32))
-                    case 0x82u8 => return Fold.Two(Rune(0x1F02u32), Rune(0x03B9u32))
-                    case 0x83u8 => return Fold.Two(Rune(0x1F03u32), Rune(0x03B9u32))
-                    case 0x84u8 => return Fold.Two(Rune(0x1F04u32), Rune(0x03B9u32))
-                    case 0x85u8 => return Fold.Two(Rune(0x1F05u32), Rune(0x03B9u32))
-                    case 0x86u8 => return Fold.Two(Rune(0x1F06u32), Rune(0x03B9u32))
-                    case 0x87u8 => return Fold.Two(Rune(0x1F07u32), Rune(0x03B9u32))
-                    case 0x88u8 => return Fold.Two(Rune(0x1F00u32), Rune(0x03B9u32))
-                    case 0x89u8 => return Fold.Two(Rune(0x1F01u32), Rune(0x03B9u32))
-                    case 0x8Au8 => return Fold.Two(Rune(0x1F02u32), Rune(0x03B9u32))
-                    case 0x8Bu8 => return Fold.Two(Rune(0x1F03u32), Rune(0x03B9u32))
-                    case 0x8Cu8 => return Fold.Two(Rune(0x1F04u32), Rune(0x03B9u32))
-                    case 0x8Du8 => return Fold.Two(Rune(0x1F05u32), Rune(0x03B9u32))
-                    case 0x8Eu8 => return Fold.Two(Rune(0x1F06u32), Rune(0x03B9u32))
-                    case 0x8Fu8 => return Fold.Two(Rune(0x1F07u32), Rune(0x03B9u32))
-                    case 0x90u8 => return Fold.Two(Rune(0x1F20u32), Rune(0x03B9u32))
-                    case 0x91u8 => return Fold.Two(Rune(0x1F21u32), Rune(0x03B9u32))
-                    case 0x92u8 => return Fold.Two(Rune(0x1F22u32), Rune(0x03B9u32))
-                    case 0x93u8 => return Fold.Two(Rune(0x1F23u32), Rune(0x03B9u32))
-                    case 0x94u8 => return Fold.Two(Rune(0x1F24u32), Rune(0x03B9u32))
-                    case 0x95u8 => return Fold.Two(Rune(0x1F25u32), Rune(0x03B9u32))
-                    case 0x96u8 => return Fold.Two(Rune(0x1F26u32), Rune(0x03B9u32))
-                    case 0x97u8 => return Fold.Two(Rune(0x1F27u32), Rune(0x03B9u32))
-                    case 0x98u8 => return Fold.Two(Rune(0x1F20u32), Rune(0x03B9u32))
-                    case 0x99u8 => return Fold.Two(Rune(0x1F21u32), Rune(0x03B9u32))
-                    case 0x9Au8 => return Fold.Two(Rune(0x1F22u32), Rune(0x03B9u32))
-                    case 0x9Bu8 => return Fold.Two(Rune(0x1F23u32), Rune(0x03B9u32))
-                    case 0x9Cu8 => return Fold.Two(Rune(0x1F24u32), Rune(0x03B9u32))
-                    case 0x9Du8 => return Fold.Two(Rune(0x1F25u32), Rune(0x03B9u32))
-                    case 0x9Eu8 => return Fold.Two(Rune(0x1F26u32), Rune(0x03B9u32))
-                    case 0x9Fu8 => return Fold.Two(Rune(0x1F27u32), Rune(0x03B9u32))
-                    case 0xA0u8 => return Fold.Two(Rune(0x1F60u32), Rune(0x03B9u32))
-                    case 0xA1u8 => return Fold.Two(Rune(0x1F61u32), Rune(0x03B9u32))
-                    case 0xA2u8 => return Fold.Two(Rune(0x1F62u32), Rune(0x03B9u32))
-                    case 0xA3u8 => return Fold.Two(Rune(0x1F63u32), Rune(0x03B9u32))
-                    case 0xA4u8 => return Fold.Two(Rune(0x1F64u32), Rune(0x03B9u32))
-                    case 0xA5u8 => return Fold.Two(Rune(0x1F65u32), Rune(0x03B9u32))
-                    case 0xA6u8 => return Fold.Two(Rune(0x1F66u32), Rune(0x03B9u32))
-                    case 0xA7u8 => return Fold.Two(Rune(0x1F67u32), Rune(0x03B9u32))
-                    case 0xA8u8 => return Fold.Two(Rune(0x1F60u32), Rune(0x03B9u32))
-                    case 0xA9u8 => return Fold.Two(Rune(0x1F61u32), Rune(0x03B9u32))
-                    case 0xAAu8 => return Fold.Two(Rune(0x1F62u32), Rune(0x03B9u32))
-                    case 0xABu8 => return Fold.Two(Rune(0x1F63u32), Rune(0x03B9u32))
-                    case 0xACu8 => return Fold.Two(Rune(0x1F64u32), Rune(0x03B9u32))
-                    case 0xADu8 => return Fold.Two(Rune(0x1F65u32), Rune(0x03B9u32))
-                    case 0xAEu8 => return Fold.Two(Rune(0x1F66u32), Rune(0x03B9u32))
-                    case 0xAFu8 => return Fold.Two(Rune(0x1F67u32), Rune(0x03B9u32))
-                    case 0xB2u8 => return Fold.Two(Rune(0x1F70u32), Rune(0x03B9u32))
-                    case 0xB3u8 => return Fold.Two(Rune(0x03B1u32), Rune(0x03B9u32))
-                    case 0xB4u8 => return Fold.Two(Rune(0x03ACu32), Rune(0x03B9u32))
-                    case 0xB6u8 => return Fold.Two(Rune(0x03B1u32), Rune(0x0342u32))
-                    case 0xB7u8 => return Fold.Three(Rune(0x03B1u32), Rune(0x0342u32), Rune(0x03B9u32))
-                    case x where (0xB8u8 <= x && x <= 0xB9u8) => UInt16(x) - 0x0008u16
-                    case x where (0xBAu8 <= x && x <= 0xBBu8) => UInt16(x) - 0x004Au16
-                    case 0xBCu8 => return Fold.Two(Rune(0x03B1u32), Rune(0x03B9u32))
-                    case 0xBEu8 => 0x03B9u16
-                    case 0xC2u8 => return Fold.Two(Rune(0x1F74u32), Rune(0x03B9u32))
-                    case 0xC3u8 => return Fold.Two(Rune(0x03B7u32), Rune(0x03B9u32))
-                    case 0xC4u8 => return Fold.Two(Rune(0x03AEu32), Rune(0x03B9u32))
-                    case 0xC6u8 => return Fold.Two(Rune(0x03B7u32), Rune(0x0342u32))
-                    case 0xC7u8 => return Fold.Three(Rune(0x03B7u32), Rune(0x0342u32), Rune(0x03B9u32))
-                    case x where (0xC8u8 <= x && x <= 0xCBu8) => UInt16(x) - 0x0056u16
-                    case 0xCCu8 => return Fold.Two(Rune(0x03B7u32), Rune(0x03B9u32))
-                    case 0xD2u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0300u32))
-                    case 0xD3u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0301u32))
-                    case 0xD6u8 => return Fold.Two(Rune(0x03B9u32), Rune(0x0342u32))
-                    case 0xD7u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0342u32))
-                    case x where (0xD8u8 <= x && x <= 0xD9u8) => UInt16(x) - 0x0008u16
-                    case x where (0xDAu8 <= x && x <= 0xDBu8) => UInt16(x) - 0x0064u16
-                    case 0xE2u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0300u32))
-                    case 0xE3u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0301u32))
-                    case 0xE4u8 => return Fold.Two(Rune(0x03C1u32), Rune(0x0313u32))
-                    case 0xE6u8 => return Fold.Two(Rune(0x03C5u32), Rune(0x0342u32))
-                    case 0xE7u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0342u32))
-                    case x where (0xE8u8 <= x && x <= 0xE9u8) => UInt16(x) - 0x0008u16
-                    case x where (0xEAu8 <= x && x <= 0xEBu8) => UInt16(x) - 0x0070u16
-                    case 0xECu8 => 0x1FE5u16
-                    case 0xF2u8 => return Fold.Two(Rune(0x1F7Cu32), Rune(0x03B9u32))
-                    case 0xF3u8 => return Fold.Two(Rune(0x03C9u32), Rune(0x03B9u32))
-                    case 0xF4u8 => return Fold.Two(Rune(0x03CEu32), Rune(0x03B9u32))
-                    case 0xF6u8 => return Fold.Two(Rune(0x03C9u32), Rune(0x0342u32))
-                    case 0xF7u8 => return Fold.Three(Rune(0x03C9u32), Rune(0x0342u32), Rune(0x03B9u32))
-                    case x where (0xF8u8 <= x && x <= 0xF9u8) => UInt16(x) - 0x0080u16
-                    case x where (0xFAu8 <= x && x <= 0xFBu8) => UInt16(x) - 0x007Eu16
-                    case 0xFCu8 => return Fold.Two(Rune(0x03C9u32), Rune(0x03B9u32))
-                    case _ => from16
-                }
+                case x where (0x08u8 <= x && x <= 0x0Fu8) => UInt16(x) - 0x0008u16
+                case x where (0x18u8 <= x && x <= 0x1Du8) => UInt16(x) - 0x0008u16
+                case x where (0x28u8 <= x && x <= 0x2Fu8) => UInt16(x) - 0x0008u16
+                case x where (0x38u8 <= x && x <= 0x3Fu8) => UInt16(x) - 0x0008u16
+                case x where (0x48u8 <= x && x <= 0x4Du8) => UInt16(x) - 0x0008u16
+                case 0x50u8 => return Fold.Two(Rune(0x03C5u32), Rune(0x0313u32))
+                case 0x52u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0313u32), Rune(0x0300u32))
+                case 0x54u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0313u32), Rune(0x0301u32))
+                case 0x56u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0313u32), Rune(0x0342u32))
+                case x where (0x59u8 <= x && x <= 0x5Fu8) =>
+                    if ((UInt16(x) & 1u16) == 1u16) {
+                        UInt16(x) - 0x0008u16
+                    } else {
+                        UInt16(x)
+                    }
+                case x where (0x68u8 <= x && x <= 0x6Fu8) => UInt16(x) - 0x0008u16
+                case 0x80u8 => return Fold.Two(Rune(0x1F00u32), Rune(0x03B9u32))
+                case 0x81u8 => return Fold.Two(Rune(0x1F01u32), Rune(0x03B9u32))
+                case 0x82u8 => return Fold.Two(Rune(0x1F02u32), Rune(0x03B9u32))
+                case 0x83u8 => return Fold.Two(Rune(0x1F03u32), Rune(0x03B9u32))
+                case 0x84u8 => return Fold.Two(Rune(0x1F04u32), Rune(0x03B9u32))
+                case 0x85u8 => return Fold.Two(Rune(0x1F05u32), Rune(0x03B9u32))
+                case 0x86u8 => return Fold.Two(Rune(0x1F06u32), Rune(0x03B9u32))
+                case 0x87u8 => return Fold.Two(Rune(0x1F07u32), Rune(0x03B9u32))
+                case 0x88u8 => return Fold.Two(Rune(0x1F00u32), Rune(0x03B9u32))
+                case 0x89u8 => return Fold.Two(Rune(0x1F01u32), Rune(0x03B9u32))
+                case 0x8Au8 => return Fold.Two(Rune(0x1F02u32), Rune(0x03B9u32))
+                case 0x8Bu8 => return Fold.Two(Rune(0x1F03u32), Rune(0x03B9u32))
+                case 0x8Cu8 => return Fold.Two(Rune(0x1F04u32), Rune(0x03B9u32))
+                case 0x8Du8 => return Fold.Two(Rune(0x1F05u32), Rune(0x03B9u32))
+                case 0x8Eu8 => return Fold.Two(Rune(0x1F06u32), Rune(0x03B9u32))
+                case 0x8Fu8 => return Fold.Two(Rune(0x1F07u32), Rune(0x03B9u32))
+                case 0x90u8 => return Fold.Two(Rune(0x1F20u32), Rune(0x03B9u32))
+                case 0x91u8 => return Fold.Two(Rune(0x1F21u32), Rune(0x03B9u32))
+                case 0x92u8 => return Fold.Two(Rune(0x1F22u32), Rune(0x03B9u32))
+                case 0x93u8 => return Fold.Two(Rune(0x1F23u32), Rune(0x03B9u32))
+                case 0x94u8 => return Fold.Two(Rune(0x1F24u32), Rune(0x03B9u32))
+                case 0x95u8 => return Fold.Two(Rune(0x1F25u32), Rune(0x03B9u32))
+                case 0x96u8 => return Fold.Two(Rune(0x1F26u32), Rune(0x03B9u32))
+                case 0x97u8 => return Fold.Two(Rune(0x1F27u32), Rune(0x03B9u32))
+                case 0x98u8 => return Fold.Two(Rune(0x1F20u32), Rune(0x03B9u32))
+                case 0x99u8 => return Fold.Two(Rune(0x1F21u32), Rune(0x03B9u32))
+                case 0x9Au8 => return Fold.Two(Rune(0x1F22u32), Rune(0x03B9u32))
+                case 0x9Bu8 => return Fold.Two(Rune(0x1F23u32), Rune(0x03B9u32))
+                case 0x9Cu8 => return Fold.Two(Rune(0x1F24u32), Rune(0x03B9u32))
+                case 0x9Du8 => return Fold.Two(Rune(0x1F25u32), Rune(0x03B9u32))
+                case 0x9Eu8 => return Fold.Two(Rune(0x1F26u32), Rune(0x03B9u32))
+                case 0x9Fu8 => return Fold.Two(Rune(0x1F27u32), Rune(0x03B9u32))
+                case 0xA0u8 => return Fold.Two(Rune(0x1F60u32), Rune(0x03B9u32))
+                case 0xA1u8 => return Fold.Two(Rune(0x1F61u32), Rune(0x03B9u32))
+                case 0xA2u8 => return Fold.Two(Rune(0x1F62u32), Rune(0x03B9u32))
+                case 0xA3u8 => return Fold.Two(Rune(0x1F63u32), Rune(0x03B9u32))
+                case 0xA4u8 => return Fold.Two(Rune(0x1F64u32), Rune(0x03B9u32))
+                case 0xA5u8 => return Fold.Two(Rune(0x1F65u32), Rune(0x03B9u32))
+                case 0xA6u8 => return Fold.Two(Rune(0x1F66u32), Rune(0x03B9u32))
+                case 0xA7u8 => return Fold.Two(Rune(0x1F67u32), Rune(0x03B9u32))
+                case 0xA8u8 => return Fold.Two(Rune(0x1F60u32), Rune(0x03B9u32))
+                case 0xA9u8 => return Fold.Two(Rune(0x1F61u32), Rune(0x03B9u32))
+                case 0xAAu8 => return Fold.Two(Rune(0x1F62u32), Rune(0x03B9u32))
+                case 0xABu8 => return Fold.Two(Rune(0x1F63u32), Rune(0x03B9u32))
+                case 0xACu8 => return Fold.Two(Rune(0x1F64u32), Rune(0x03B9u32))
+                case 0xADu8 => return Fold.Two(Rune(0x1F65u32), Rune(0x03B9u32))
+                case 0xAEu8 => return Fold.Two(Rune(0x1F66u32), Rune(0x03B9u32))
+                case 0xAFu8 => return Fold.Two(Rune(0x1F67u32), Rune(0x03B9u32))
+                case 0xB2u8 => return Fold.Two(Rune(0x1F70u32), Rune(0x03B9u32))
+                case 0xB3u8 => return Fold.Two(Rune(0x03B1u32), Rune(0x03B9u32))
+                case 0xB4u8 => return Fold.Two(Rune(0x03ACu32), Rune(0x03B9u32))
+                case 0xB6u8 => return Fold.Two(Rune(0x03B1u32), Rune(0x0342u32))
+                case 0xB7u8 => return Fold.Three(Rune(0x03B1u32), Rune(0x0342u32), Rune(0x03B9u32))
+                case x where (0xB8u8 <= x && x <= 0xB9u8) => UInt16(x) - 0x0008u16
+                case x where (0xBAu8 <= x && x <= 0xBBu8) => UInt16(x) - 0x004Au16
+                case 0xBCu8 => return Fold.Two(Rune(0x03B1u32), Rune(0x03B9u32))
+                case 0xBEu8 => 0x03B9u16
+                case 0xC2u8 => return Fold.Two(Rune(0x1F74u32), Rune(0x03B9u32))
+                case 0xC3u8 => return Fold.Two(Rune(0x03B7u32), Rune(0x03B9u32))
+                case 0xC4u8 => return Fold.Two(Rune(0x03AEu32), Rune(0x03B9u32))
+                case 0xC6u8 => return Fold.Two(Rune(0x03B7u32), Rune(0x0342u32))
+                case 0xC7u8 => return Fold.Three(Rune(0x03B7u32), Rune(0x0342u32), Rune(0x03B9u32))
+                case x where (0xC8u8 <= x && x <= 0xCBu8) => UInt16(x) - 0x0056u16
+                case 0xCCu8 => return Fold.Two(Rune(0x03B7u32), Rune(0x03B9u32))
+                case 0xD2u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0300u32))
+                case 0xD3u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0301u32))
+                case 0xD6u8 => return Fold.Two(Rune(0x03B9u32), Rune(0x0342u32))
+                case 0xD7u8 => return Fold.Three(Rune(0x03B9u32), Rune(0x0308u32), Rune(0x0342u32))
+                case x where (0xD8u8 <= x && x <= 0xD9u8) => UInt16(x) - 0x0008u16
+                case x where (0xDAu8 <= x && x <= 0xDBu8) => UInt16(x) - 0x0064u16
+                case 0xE2u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0300u32))
+                case 0xE3u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0301u32))
+                case 0xE4u8 => return Fold.Two(Rune(0x03C1u32), Rune(0x0313u32))
+                case 0xE6u8 => return Fold.Two(Rune(0x03C5u32), Rune(0x0342u32))
+                case 0xE7u8 => return Fold.Three(Rune(0x03C5u32), Rune(0x0308u32), Rune(0x0342u32))
+                case x where (0xE8u8 <= x && x <= 0xE9u8) => UInt16(x) - 0x0008u16
+                case x where (0xEAu8 <= x && x <= 0xEBu8) => UInt16(x) - 0x0070u16
+                case 0xECu8 => 0x1FE5u16
+                case 0xF2u8 => return Fold.Two(Rune(0x1F7Cu32), Rune(0x03B9u32))
+                case 0xF3u8 => return Fold.Two(Rune(0x03C9u32), Rune(0x03B9u32))
+                case 0xF4u8 => return Fold.Two(Rune(0x03CEu32), Rune(0x03B9u32))
+                case 0xF6u8 => return Fold.Two(Rune(0x03C9u32), Rune(0x0342u32))
+                case 0xF7u8 => return Fold.Three(Rune(0x03C9u32), Rune(0x0342u32), Rune(0x03B9u32))
+                case x where (0xF8u8 <= x && x <= 0xF9u8) => UInt16(x) - 0x0080u16
+                case x where (0xFAu8 <= x && x <= 0xFBu8) => UInt16(x) - 0x007Eu16
+                case 0xFCu8 => return Fold.Two(Rune(0x03C9u32), Rune(0x03B9u32))
+                case _ => from16
+            }
             case 0x20u8 => from16
             case 0x21u8 => match (lowByte) {
-                    case 0x26u8 => 0x03C9u16
-                    case 0x2Au8 => 0x006Bu16
-                    case 0x2Bu8 => 0x00E5u16
-                    case 0x32u8 => 0x214Eu16
-                    case x where (0x60u8 <= x && x <= 0x6Fu8) => UInt16(x) + 0x0010u16
-                    case 0x83u8 => 0x2184u16
-                    case _ => from16
-                }
+                case 0x26u8 => 0x03C9u16
+                case 0x2Au8 => 0x006Bu16
+                case 0x2Bu8 => 0x00E5u16
+                case 0x32u8 => 0x214Eu16
+                case x where (0x60u8 <= x && x <= 0x6Fu8) => UInt16(x) + 0x0010u16
+                case 0x83u8 => 0x2184u16
+                case _ => from16
+            }
             case 0x22u8 => from16
             case 0x23u8 => from16
             case 0x24u8 => match (lowByte) {
-                    case x where (0xB6u8 <= x && x <= 0xCFu8) => UInt16(x) + 0x001Au16
-                    case _ => from16
-                }
+                case x where (0xB6u8 <= x && x <= 0xCFu8) => UInt16(x) + 0x001Au16
+                case _ => from16
+            }
             case 0x25u8 => from16
             case 0x26u8 => from16
             case 0x27u8 => from16
@@ -318,84 +318,84 @@ func lookup(orig: Rune): Fold {
             case 0x2Au8 => from16
             case 0x2Bu8 => from16
             case 0x2Cu8 => match (lowByte) {
-                    case x where (x <= 0x2Fu8) => UInt16(x) + 0x0030u16
-                    case 0x60u8 => 0x2C61u16
-                    case 0x62u8 => 0x026Bu16
-                    case 0x63u8 => 0x1D7Du16
-                    case 0x64u8 => 0x027Du16
-                    case x where (0x67u8 <= x && x <= 0x6Bu8) => (UInt16(x) + 1u16) & 0xFFFEu16
-                    case 0x6Du8 => 0x0251u16
-                    case 0x6Eu8 => 0x0271u16
-                    case 0x6Fu8 => 0x0250u16
-                    case 0x70u8 => 0x0252u16
-                    case 0x72u8 => 0x2C73u16
-                    case 0x75u8 => 0x2C76u16
-                    case x where (0x7Eu8 <= x && x <= 0x7Fu8) => UInt16(x) - 0x2A3Fu16
-                    case x where (0x80u8 <= x && x <= 0xE2u8) => UInt16(x) | 0x01u16
-                    case x where (0xEBu8 <= x && x <= 0xEDu8) => (UInt16(x) + 1u16) & 0xFFFEu16
-                    case 0xF2u8 => 0x2CF3u16
-                    case _ => from16
-                }
+                case x where (x <= 0x2Fu8) => UInt16(x) + 0x0030u16
+                case 0x60u8 => 0x2C61u16
+                case 0x62u8 => 0x026Bu16
+                case 0x63u8 => 0x1D7Du16
+                case 0x64u8 => 0x027Du16
+                case x where (0x67u8 <= x && x <= 0x6Bu8) => (UInt16(x) + 1u16) & 0xFFFEu16
+                case 0x6Du8 => 0x0251u16
+                case 0x6Eu8 => 0x0271u16
+                case 0x6Fu8 => 0x0250u16
+                case 0x70u8 => 0x0252u16
+                case 0x72u8 => 0x2C73u16
+                case 0x75u8 => 0x2C76u16
+                case x where (0x7Eu8 <= x && x <= 0x7Fu8) => UInt16(x) - 0x2A3Fu16
+                case x where (0x80u8 <= x && x <= 0xE2u8) => UInt16(x) | 0x01u16
+                case x where (0xEBu8 <= x && x <= 0xEDu8) => (UInt16(x) + 1u16) & 0xFFFEu16
+                case 0xF2u8 => 0x2CF3u16
+                case _ => from16
+            }
             case _ => from16
         }
         Fold.One(Rune(UInt32(singleChar)))
     } else {
         let singleChar32: UInt32 = match (from32) {
-                case x where (0xA640u32 <= x && x <= 0xA66Cu32) => UInt32(x) | 0x01u32
-                case x where (0xA680u32 <= x && x <= 0xA69Au32) => UInt32(x) | 0x01u32
-                case x where (0xA722u32 <= x && x <= 0xA72Eu32) => UInt32(x) | 0x01u32
-                case x where (0xA732u32 <= x && x <= 0xA76Eu32) => UInt32(x) | 0x01u32
-                case x where (0xA779u32 <= x && x <= 0xA77Bu32) => (UInt32(x) + 1u32) & 0xFFFFFFFEu32
-                case 0xA77Du32 => 0x1D79u32
-                case x where (0xA77Eu32 <= x && x <= 0xA786u32) => UInt32(x) | 0x01u32
-                case 0xA78Bu32 => 0xA78Cu32
-                case 0xA78Du32 => 0x0265u32
-                case x where (0xA790u32 <= x && x <= 0xA792u32) => UInt32(x) | 0x01u32
-                case x where (0xA796u32 <= x && x <= 0xA7A8u32) => UInt32(x) | 0x01u32
-                case 0xA7AAu32 => 0x0266u32
-                case 0xA7ABu32 => 0x025Cu32
-                case 0xA7ACu32 => 0x0261u32
-                case 0xA7ADu32 => 0x026Cu32
-                case 0xA7AEu32 => 0x026Au32
-                case 0xA7B0u32 => 0x029Eu32
-                case 0xA7B1u32 => 0x0287u32
-                case 0xA7B2u32 => 0x029Du32
-                case 0xA7B3u32 => 0xAB53u32
-                case x where (0xA7B4u32 <= x && x <= 0xA7C2u32) => UInt32(x) | 0x01u32
-                case 0xA7C4u32 => 0xA794u32
-                case 0xA7C5u32 => 0x0282u32
-                case 0xA7C6u32 => 0x1D8Eu32
-                case x where (0xA7C7u32 <= x && x <= 0xA7C9u32) => (UInt32(x) + 1u32) & 0xFFFFFFFEu32
-                case 0xA7CBu32 => 0x0264u32
-                case x where (0xA7CCu32 <= x && x <= 0xA7DAu32) => UInt32(x) | 0x01u32
-                case 0xA7DCu32 => 0x019Bu32
-                case 0xA7F5u32 => 0xA7F6u32
-                case x where (0xAB70u32 <= x && x <= 0xABBFu32) => UInt32(x) - 0x97D0u32
-                case 0xFB00u32 => return Fold.Two(Rune(0x0066u32), Rune(0x0066u32))
-                case 0xFB01u32 => return Fold.Two(Rune(0x0066u32), Rune(0x0069u32))
-                case 0xFB02u32 => return Fold.Two(Rune(0x0066u32), Rune(0x006Cu32))
-                case 0xFB03u32 => return Fold.Three(Rune(0x0066u32), Rune(0x0066u32), Rune(0x0069u32))
-                case 0xFB04u32 => return Fold.Three(Rune(0x0066u32), Rune(0x0066u32), Rune(0x006Cu32))
-                case 0xFB05u32 => return Fold.Two(Rune(0x0073u32), Rune(0x0074u32))
-                case 0xFB06u32 => return Fold.Two(Rune(0x0073u32), Rune(0x0074u32))
-                case 0xFB13u32 => return Fold.Two(Rune(0x0574u32), Rune(0x0576u32))
-                case 0xFB14u32 => return Fold.Two(Rune(0x0574u32), Rune(0x0565u32))
-                case 0xFB15u32 => return Fold.Two(Rune(0x0574u32), Rune(0x056Bu32))
-                case 0xFB16u32 => return Fold.Two(Rune(0x057Eu32), Rune(0x0576u32))
-                case 0xFB17u32 => return Fold.Two(Rune(0x0574u32), Rune(0x056Du32))
-                case x where (0xFF21u32 <= x && x <= 0xFF3Au32) => UInt32(x) + 0x0020u32
-                case x where (0x10400u32 <= x && x <= 0x10427u32) => UInt32(x) + 0x0028u32
-                case x where (0x104B0u32 <= x && x <= 0x104D3u32) => UInt32(x) + 0x0028u32
-                case x where (0x10570u32 <= x && x <= 0x1057Au32) => UInt32(x) + 0x0027u32
-                case x where (0x1057Cu32 <= x && x <= 0x1058Au32) => UInt32(x) + 0x0027u32
-                case x where (0x1058Cu32 <= x && x <= 0x10592u32) => UInt32(x) + 0x0027u32
-                case x where (0x10594u32 <= x && x <= 0x10595u32) => UInt32(x) + 0x0027u32
-                case x where (0x10C80u32 <= x && x <= 0x10CB2u32) => UInt32(x) + 0x0040u32
-                case x where (0x10D50u32 <= x && x <= 0x10D65u32) => UInt32(x) + 0x0020u32
-                case x where (0x118A0u32 <= x && x <= 0x118BFu32) => UInt32(x) + 0x0020u32
-                case x where (0x16E40u32 <= x && x <= 0x16E5Fu32) => UInt32(x) + 0x0020u32
-                case x where (0x16EA0u32 <= x && x <= 0x16EB8u32) => UInt32(x) + 0x001Bu32
-                case x where (0x1E900u32 <= x && x <= 0x1E921u32) => UInt32(x) + 0x0022u32
+            case x where (0xA640u32 <= x && x <= 0xA66Cu32) => UInt32(x) | 0x01u32
+            case x where (0xA680u32 <= x && x <= 0xA69Au32) => UInt32(x) | 0x01u32
+            case x where (0xA722u32 <= x && x <= 0xA72Eu32) => UInt32(x) | 0x01u32
+            case x where (0xA732u32 <= x && x <= 0xA76Eu32) => UInt32(x) | 0x01u32
+            case x where (0xA779u32 <= x && x <= 0xA77Bu32) => (UInt32(x) + 1u32) & 0xFFFFFFFEu32
+            case 0xA77Du32 => 0x1D79u32
+            case x where (0xA77Eu32 <= x && x <= 0xA786u32) => UInt32(x) | 0x01u32
+            case 0xA78Bu32 => 0xA78Cu32
+            case 0xA78Du32 => 0x0265u32
+            case x where (0xA790u32 <= x && x <= 0xA792u32) => UInt32(x) | 0x01u32
+            case x where (0xA796u32 <= x && x <= 0xA7A8u32) => UInt32(x) | 0x01u32
+            case 0xA7AAu32 => 0x0266u32
+            case 0xA7ABu32 => 0x025Cu32
+            case 0xA7ACu32 => 0x0261u32
+            case 0xA7ADu32 => 0x026Cu32
+            case 0xA7AEu32 => 0x026Au32
+            case 0xA7B0u32 => 0x029Eu32
+            case 0xA7B1u32 => 0x0287u32
+            case 0xA7B2u32 => 0x029Du32
+            case 0xA7B3u32 => 0xAB53u32
+            case x where (0xA7B4u32 <= x && x <= 0xA7C2u32) => UInt32(x) | 0x01u32
+            case 0xA7C4u32 => 0xA794u32
+            case 0xA7C5u32 => 0x0282u32
+            case 0xA7C6u32 => 0x1D8Eu32
+            case x where (0xA7C7u32 <= x && x <= 0xA7C9u32) => (UInt32(x) + 1u32) & 0xFFFFFFFEu32
+            case 0xA7CBu32 => 0x0264u32
+            case x where (0xA7CCu32 <= x && x <= 0xA7DAu32) => UInt32(x) | 0x01u32
+            case 0xA7DCu32 => 0x019Bu32
+            case 0xA7F5u32 => 0xA7F6u32
+            case x where (0xAB70u32 <= x && x <= 0xABBFu32) => UInt32(x) - 0x97D0u32
+            case 0xFB00u32 => return Fold.Two(Rune(0x0066u32), Rune(0x0066u32))
+            case 0xFB01u32 => return Fold.Two(Rune(0x0066u32), Rune(0x0069u32))
+            case 0xFB02u32 => return Fold.Two(Rune(0x0066u32), Rune(0x006Cu32))
+            case 0xFB03u32 => return Fold.Three(Rune(0x0066u32), Rune(0x0066u32), Rune(0x0069u32))
+            case 0xFB04u32 => return Fold.Three(Rune(0x0066u32), Rune(0x0066u32), Rune(0x006Cu32))
+            case 0xFB05u32 => return Fold.Two(Rune(0x0073u32), Rune(0x0074u32))
+            case 0xFB06u32 => return Fold.Two(Rune(0x0073u32), Rune(0x0074u32))
+            case 0xFB13u32 => return Fold.Two(Rune(0x0574u32), Rune(0x0576u32))
+            case 0xFB14u32 => return Fold.Two(Rune(0x0574u32), Rune(0x0565u32))
+            case 0xFB15u32 => return Fold.Two(Rune(0x0574u32), Rune(0x056Bu32))
+            case 0xFB16u32 => return Fold.Two(Rune(0x057Eu32), Rune(0x0576u32))
+            case 0xFB17u32 => return Fold.Two(Rune(0x0574u32), Rune(0x056Du32))
+            case x where (0xFF21u32 <= x && x <= 0xFF3Au32) => UInt32(x) + 0x0020u32
+            case x where (0x10400u32 <= x && x <= 0x10427u32) => UInt32(x) + 0x0028u32
+            case x where (0x104B0u32 <= x && x <= 0x104D3u32) => UInt32(x) + 0x0028u32
+            case x where (0x10570u32 <= x && x <= 0x1057Au32) => UInt32(x) + 0x0027u32
+            case x where (0x1057Cu32 <= x && x <= 0x1058Au32) => UInt32(x) + 0x0027u32
+            case x where (0x1058Cu32 <= x && x <= 0x10592u32) => UInt32(x) + 0x0027u32
+            case x where (0x10594u32 <= x && x <= 0x10595u32) => UInt32(x) + 0x0027u32
+            case x where (0x10C80u32 <= x && x <= 0x10CB2u32) => UInt32(x) + 0x0040u32
+            case x where (0x10D50u32 <= x && x <= 0x10D65u32) => UInt32(x) + 0x0020u32
+            case x where (0x118A0u32 <= x && x <= 0x118BFu32) => UInt32(x) + 0x0020u32
+            case x where (0x16E40u32 <= x && x <= 0x16E5Fu32) => UInt32(x) + 0x0020u32
+            case x where (0x16EA0u32 <= x && x <= 0x16EB8u32) => UInt32(x) + 0x001Bu32
+            case x where (0x1E900u32 <= x && x <= 0x1E921u32) => UInt32(x) + 0x0022u32
             case _ => from32
         }
         Fold.One(Rune(singleChar32))

@@ -8,13 +8,8 @@ func isJoiningGroupLam(c: Rune): Bool {
 
 func isLigatureTransparent(c: Rune): Bool {
     let cp = UInt32(c)
-    return cp == 0x34Fu32 ||
-        (cp >= 0x17B4u32 && cp <= 0x17B5u32) ||
-        (cp >= 0x180Bu32 && cp <= 0x180Du32) ||
-        cp == 0x180Fu32 ||
-        cp == 0x200Du32 ||
-        (cp >= 0xFE00u32 && cp <= 0xFE0Fu32) ||
-        (cp >= 0xE0100u32 && cp <= 0xE01EFu32)
+    return cp == 0x34Fu32 || (cp >= 0x17B4u32 && cp <= 0x17B5u32) || (cp >= 0x180Bu32 && cp <= 0x180Du32) || cp ==
+        0x180Fu32 || cp == 0x200Du32 || (cp >= 0xFE00u32 && cp <= 0xFE0Fu32) || (cp >= 0xE0100u32 && cp <= 0xE01EFu32)
 }
 
 func startsEmojiPresentationSeq(c: Rune): Bool {
