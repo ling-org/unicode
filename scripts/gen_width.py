@@ -773,7 +773,7 @@ def emit_tables_cj(
 ):
     module.write("package unicode_width\n\n")
     module.write(
-        f"public let UNICODE_VERSION: (UInt8, UInt8, UInt8) = ({unicode_version[0]}u8, {unicode_version[1]}u8, {unicode_version[2]}u8)\n"
+        f"public const UNICODE_VERSION: (UInt8, UInt8, UInt8) = ({unicode_version[0]}u8, {unicode_version[1]}u8, {unicode_version[2]}u8)\n"
     )
 
     emoji_presentation_idx, emoji_presentation_leaves = emoji_presentation_table
@@ -788,8 +788,9 @@ def emit_tables_cj(
         byte_array = table.to_bytes()
 
         if table.bytes_per_row is None:
-            # Flat table (ROOT / ROOT_CJK)
-            module.write(f"\nlet {table.name}: Array<UInt8> = [\n")
+            # Flat table (ROOT / ROOT_CJK) -> const VArray<UInt8, $N>
+            n = len(byte_array)
+            module.write(f"\nconst {table.name}: VArray<UInt8, ${n}> = [\n")
             for j, byte in enumerate(byte_array):
                 if j % 16 == 0:
                     module.write("   ")
@@ -798,15 +799,16 @@ def emit_tables_cj(
                     module.write("\n")
             module.write("]\n")
         else:
-            # 2D table (MIDDLE / LEAVES) - include ALL rows
+            # 2D table (MIDDLE / LEAVES) -> const VArray<VArray<UInt8, $COLS>, $ROWS>
             num_rows = len(byte_array) // table.bytes_per_row
+            cols = table.bytes_per_row
             module.write(
-                f"\nlet {table.name}: Array<Array<UInt8>> = [\n"
+                f"\nconst {table.name}: VArray<VArray<UInt8, ${cols}>, ${num_rows}> = [\n"
             )
-            for row_num in range(0, num_rows):
+            for row_num in range(num_rows):
                 module.write("    [\n")
                 row = byte_array[
-                    row_num * table.bytes_per_row : (row_num + 1) * table.bytes_per_row
+                    row_num * cols : (row_num + 1) * cols
                 ]
                 for subrow in batched(row, 15):
                     module.write("       ")
@@ -818,7 +820,7 @@ def emit_tables_cj(
 
         subtable_count = new_subtable_count
 
-    # NON_TRANSPARENT_ZERO_WIDTHS
+    # NON_TRANSPARENT_ZERO_WIDTHS -> let Array (passed to binary search function)
     module.write(
         f"\nlet NON_TRANSPARENT_ZERO_WIDTHS: Array<(UInt32, UInt32)> = [\n"
     )
@@ -826,7 +828,7 @@ def emit_tables_cj(
         module.write(f"    (0x{lo:06X}u32, 0x{hi:06X}u32),\n")
     module.write("]\n")
 
-    # SOLIDUS_TRANSPARENT
+    # SOLIDUS_TRANSPARENT -> let Array (passed to binary search function)
     module.write(
         f"\nlet SOLIDUS_TRANSPARENT: Array<(UInt32, UInt32)> = [\n"
     )
@@ -834,9 +836,11 @@ def emit_tables_cj(
         module.write(f"    (0x{lo:06X}u32, 0x{hi:06X}u32),\n")
     module.write("]\n")
 
-    # EMOJI_PRESENTATION_LEAVES
+    # EMOJI_PRESENTATION_LEAVES -> const VArray<VArray<UInt8, $COLS>, $ROWS>
+    ep_rows = len(emoji_presentation_leaves)
+    ep_cols = len(emoji_presentation_leaves[0]) if ep_rows > 0 else 0
     module.write(
-        f"\nlet EMOJI_PRESENTATION_LEAVES: Array<Array<UInt8>> = [\n"
+        f"\nconst EMOJI_PRESENTATION_LEAVES: VArray<VArray<UInt8, ${ep_cols}>, ${ep_rows}> = [\n"
     )
     for leaf in emoji_presentation_leaves:
         module.write("    [\n")
@@ -848,7 +852,7 @@ def emit_tables_cj(
         module.write("    ],\n")
     module.write("]\n")
 
-    # TEXT_PRESENTATION_LEAF_N
+    # TEXT_PRESENTATION_LEAF_N -> let Array (variable-length, used as function args)
     for leaf_idx, leaf in enumerate(text_presentation_leaves):
         module.write(
             f"\nlet TEXT_PRESENTATION_LEAF_{leaf_idx}: Array<(UInt8, UInt8)> = [\n"
@@ -857,7 +861,7 @@ def emit_tables_cj(
             module.write(f"    (0x{lo:02X}u8, 0x{hi:02X}u8),\n")
         module.write("]\n")
 
-    # EMOJI_MODIFIER_LEAF_N
+    # EMOJI_MODIFIER_LEAF_N -> let Array (variable-length, used as function args)
     for leaf_idx, leaf in enumerate(emoji_modifier_leaves):
         module.write(
             f"\nlet EMOJI_MODIFIER_LEAF_{leaf_idx}: Array<(UInt8, UInt8)> = [\n"
